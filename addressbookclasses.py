@@ -55,22 +55,18 @@ class Record:
         self.birthday=Birthday(birthday)
 
     def add_phone(self,phone:str):
-        if len(phone)!=10 or not phone.isdigit():
-               raise PhoneError
+        if   not phone.isdigit() or len(phone)!=10: #Debug !=10
+               raise PhoneError("Мust be 10 digit")
         self.phones.append(Phone(phone))
 
     def edit_phone(self,old_phone,new_phone):
-        if len(new_phone)!=10 or not new_phone.isdigit():
-               raise PhoneError
-        try:
-            fo=self.find_phone(old_phone)
-            if fo==None:
-                raise ValueError
-            fo.value=new_phone
-        except ValueError:
-            print("No such number")
-        except PhoneError:
-            print("incorrect phone number")
+        if   not new_phone.isdigit() or len(new_phone)!=10: #Debug !=10
+            raise PhoneError("Мust be 10 digit")
+        fo=self.find_phone(old_phone)
+        if fo==None:
+            raise ValueError("No such phone")
+        fo.value=new_phone
+
         
     def find_phone(self,phone):
         phone_objects=[x for x in self.phones if x.value==phone]
@@ -92,7 +88,7 @@ class AddressBook(UserDict):
         self.data[record.name.value]=record
         
     def find(self,user_name):
-        return self.data[user_name]
+        return self.data.get(user_name)
     
     def delete(self,user_name):
         try:

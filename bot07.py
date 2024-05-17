@@ -5,10 +5,8 @@ def input_error(func):
     def inner(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except ValueError:
-            return "Give me name and data please."
-        except KeyError:
-            return("user is present already")
+        except Exception as e:
+            return str(e)
 
     return inner
 
@@ -17,48 +15,93 @@ def parse_error(func):
         try:
             return func(*args, **kwargs)
         except ValueError:
-            print("cann't parse")
+            print("cann't parse, input command please")
             return "",""
 
     return inner
 
-def change_error(func):
-    def inner(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except KeyError:
-            return "user absent"
-            #return "no such user"
-        except ValueError:
-            return "please input <change user_name>"    
-    return inner
+# def change_error(func):
+#     def inner(*args, **kwargs):
+#         try:
+#             return func(*args, **kwargs)
+#         except KeyError:
+#             return "user absent"
+#             #return "no such user"
+#         except ValueError:
+#             return "please input <change user_name>"    
+#     return inner
 
-def phone_error(func):
-    def inner(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except KeyError:
-            return "no such user"
-        except IndexError:
-            return "please input phone + user name"
+# def phone_error(func):
+#     def inner(*args, **kwargs):
+#         try:
+#             return func(*args, **kwargs)
+#         except KeyError:
+#             return "no such user"
+#         except IndexError:
+#             return "please input phone + user name"
 
-    return inner
+#     return inner
 
-@input_error
-def add_birthday(args, book):
-    pass # реалізація
 
-@input_error
-def show_birthday(args, book):
-    pass # реалізація
 
-@input_error
+
+#birthdays
 def birthdays(args, book):
     l=book.get_upcoming_birthdays() # реалізація
-    print(l)
+    return l
+
+#show-birthday [ім'я]: 
+@input_error
+def show_birthday(args, book):
+    if len(args)<1:
+        raise ValueError("show-birthday [name]")
+    name,  *_ = args
+    record:addressbookclasses.Record = book.find(name)
+    if record==None:
+        raise Exception("No such user")
+    return f"birthday: {record.birthday}"
+
+#add-birthday [ім'я] [дата народження]    
+@input_error
+def add_birthday(args, book):
+    if len(args)<2:
+        raise ValueError("Format: add-birthday [name] [birthday]")
+    name, birthday,  *_ = args
+    record:addressbookclasses.Record = book.find(name)
+    if record==None:
+        raise Exception("No such user")
+    record.add_birthday(birthday)
+    return "Birthday added "
+
+#phone [ім'я]:
+@input_error
+def phone_contact(args, book:addressbookclasses.AddressBook):
+    if len(args)<1:
+        raise ValueError("Format: phone [name]")
+    name,  *_ = args
+    record:addressbookclasses.Record = book.find(name)
+    if record==None:
+        raise Exception("No such user")
+    return f"phones: {'; '.join(p.value for p in record.phones)}"
+
+#change [ім'я] [старий телефон] [новий телефон]
+@input_error
+def change_contact(args, book:addressbookclasses.AddressBook):
+    if len(args)<3:
+        raise ValueError("Format: change [name] [old phone] [new phone]")
+    name, old_phone,new_phone, *_ = args
+    record:addressbookclasses.Record = book.find(name)
+    if record==None:
+        raise Exception("No such user")
+    record.edit_phone(old_phone,new_phone)
+    return "phone changed"
+
 
 @input_error
 def add_contact(args, book: addressbookclasses.AddressBook):
+    #print(type(args))
+    if len(args)<2:
+        raise ValueError("Format: add [name] [phone]")
     name, phone, *_ = args
     record = book.find(name)
     message = "Contact updated."
@@ -94,13 +137,14 @@ def main():
             print(add_contact(args, book))
 
         elif command == "change":
-            print(add_contact(args, book))
+            print(change_contact(args, book))
 
         elif command == "phone":
-            pass# реалізація
+            print(phone_contact(args, book)) 
 
         elif command == "all":
-            pass# реалізація
+            for name, record in book.data.items():
+                print(record)
 
         elif command == "add-birthday":
             print(add_birthday(args, book))
@@ -109,7 +153,9 @@ def main():
             print(show_birthday(args, book))# реалізація
 
         elif command == "birthdays":
-            print(birthdays(args, book))# реалізація
+            b=birthdays(args, book)# реалізація
+            for x in b:
+                print(f"Name: {x['name']}, congratulation date: {x['congratulation_date']}" ) 
 
         else:
             print("Invalid command.")
